@@ -1,5 +1,6 @@
 .idea/
 data/input/  # Keeps the large archive and corresponding index out of version control
+data/output
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
