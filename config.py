@@ -4,6 +4,7 @@ Project-wide constants and settings.
 
 from pathlib import Path
 from typing import Any, Dict, List
+import json
 
 from wikipedia.models import WikipediaArticle
 
@@ -17,4 +18,4 @@ WIKIPEDIA_INDEX_FILE: Path = INPUT_DATA_DIR / "enwiki-20200201-pages-articles-mu
 
 SEED_LIST: List[WikipediaArticle] = []  # TODO -- read in seed list from somewhere
 
-NEO4K_CONNECTION_PARAMETERS: Dict[Any] = json.loads(open('neo4j.json', 'r'))
+NEO4J_CONNECTION_PARAMETERS: Dict[str, Any] = json.load(open('neo4j.json', 'r'))
