@@ -1,0 +1,6 @@
+ {
+    "bolt_port": 7687,
+    "host": "http://localhost",
+    "user": "neo4j",
+    "pass": "neo4j"
+}
