@@ -1,0 +1,6 @@
+ {
+    "bolt_port": 7687,
+    "host": "http://croix.me",
+    "user": "neo4j",
+    "pass": "RachlinRules"
+}
