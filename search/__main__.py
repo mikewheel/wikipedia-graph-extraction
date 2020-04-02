@@ -1,5 +1,6 @@
 """
-Controller module for .
+Controller module for generation of Neo4J data store entries modeling graphical relationships between
+members of the music industry on Wikipedia.
 """
 
 from neo4j import add_node, add_edge
