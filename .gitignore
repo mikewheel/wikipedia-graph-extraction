@@ -1,5 +1,5 @@
 .idea/
-data/input/  # Keeps the large archive and corresponding index out of version control
+data/ # Keeps the large archive and corresponding index out of version control
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -116,6 +116,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+virtualenv/
 
 # Spyder project settings
 .spyderproject

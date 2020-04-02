@@ -25,7 +25,7 @@ class WikipediaArchiveSearcher:
         
         self.multistream_path = multistream_path
         self.index_path = index_path
-        self.index = self.parse_index()
+        # self.index = self.parse_index()
         
     def parse_index(self):
         """
