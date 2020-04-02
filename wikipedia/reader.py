@@ -8,6 +8,8 @@ from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, OUTPUT_DATA_DIR
 from os.path import exists
 from os import PathLike
 
+from wikipedia.models import WikipediaArticle
+
 
 class WikipediaArchiveSearcher:
     """
@@ -34,7 +36,7 @@ class WikipediaArchiveSearcher:
         """
         raise NotImplementedError("Write me!")
     
-    def retrieve_article_xml(self, title: str) -> str:
+    def retrieve_article_xml(self, title: WikipediaArticle) -> str:
         """
         Pulls the XML content of a specific Wikipedia article from the archive.
         :param title: The title of the article in question.
