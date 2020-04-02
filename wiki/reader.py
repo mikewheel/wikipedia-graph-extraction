@@ -8,9 +8,7 @@ from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, OUTPUT_DATA_DIR
 from os.path import exists
 from os import PathLike
 import sqlite3
-import html.parser
-import re
-
+from html.parser import HTMLParser
 
 
 class WikipediaArchiveSearcher:
@@ -22,55 +20,7 @@ class WikipediaArchiveSearcher:
     class ArticleNotFoundError(Exception):
         """Custom exception for when some article isn't found in the archive."""
         pass
-
-    class MWParser(html.parser.HTMLParser):
-
-        def __init__(self, id: str):
-            super().__init__()
-            self.true_id = id
-            self.observed_id = None
-            self.lines = []
-            self.curr_tag_id = False
-            self.final_lines = []
-
-        def handle_starttag(self, tag, attrs):
-            if not self.final_lines:
-                line_components = []
-                if tag  == "page":
-                    self.observed_id = None
-                    self.lines = []
-                    self.curr_tag_id = False
-                elif tag == "id":
-                    self.curr_tag_id = True
-                line_components.append("<")
-                line_components.append(tag)
-                for tup in attrs:
-                    line_components.append(f' {tup[0]}=\"{tup[1]}\"')
-                line_components.append(">")
-                self.lines.append("".join(line_components))
-
-        def handle_data(self, data):
-            if not self.final_lines:
-                self.lines.append(data)
-                if self.curr_tag_id and self.observed_id is None:
-                    self.observed_id = data
-
-        def handle_endtag(self, tag):
-            if not self.final_lines:
-                line_components = ["</", tag, ">"]
-                self.lines.append("".join(line_components))
-                if tag == "id":
-                    self.curr_tag_id = False
-                print(tag, str(self.true_id), str(self.observed_id))
-                if tag == "page" and str(self.true_id) == str(self.observed_id):
-                    self.final_lines = self.lines.copy()
-                print(self.final_lines)
-
-        def feed(self, data):
-            self.rawdata = data
-            self.goahead(0)
-
-
+    
     def __init__(self, multistream_path: PathLike, index_path: PathLike):
         assert exists(multistream_path), f'Multistream path does not exist on the file system: {multistream_path}'
         assert exists(index_path), f'Index path does not exist on the file system: {index_path}'
@@ -82,9 +32,7 @@ class WikipediaArchiveSearcher:
         # self.index = self.parse_index()
         self.index = None
         #---
-
-
-        
+    
     def parse_index(self):
         """
         Maps each known article title to its start index, end index, title, and unique ID for fast searching later.
@@ -117,10 +65,7 @@ class WikipediaArchiveSearcher:
         parser.feed(xml_block)
         page = "".join(parser.final_lines)
         return page
-
-
-
-
+        
         # TODO -- try to search self.index for the title text
         # TODO -- except article not found -> raise self.ArticleNotFoundError(title)
         # TODO -- else get the start and end indices where the article is located in the archive, along with the ID
@@ -143,6 +88,57 @@ class WikipediaArchiveSearcher:
         return bz2_decom.decompress(bytes_of_interest).decode()
 
 
+class MWParser(HTMLParser):
+    """
+    Extension of Python's HTMLParser class as applied to Wikipedia article XML content.
+    """
+
+    def __init__(self, id: str):
+        super().__init__()
+        self.true_id = id
+        self.observed_id = None
+        self.lines = []
+        self.curr_tag_id = False
+        self.final_lines = []
+
+    def handle_starttag(self, tag, attrs):
+        if not self.final_lines:
+            line_components = []
+            if tag == "page":
+                self.observed_id = None
+                self.lines = []
+                self.curr_tag_id = False
+            elif tag == "id":
+                self.curr_tag_id = True
+            line_components.append("<")
+            line_components.append(tag)
+            for tup in attrs:
+                line_components.append(f' {tup[0]}=\"{tup[1]}\"')
+            line_components.append(">")
+            self.lines.append("".join(line_components))
+
+    def handle_data(self, data):
+        if not self.final_lines:
+            self.lines.append(data)
+            if self.curr_tag_id and self.observed_id is None:
+                self.observed_id = data
+
+    def handle_endtag(self, tag):
+        if not self.final_lines:
+            line_components = ["</", tag, ">"]
+            self.lines.append("".join(line_components))
+            if tag == "id":
+                self.curr_tag_id = False
+            print(tag, str(self.true_id), str(self.observed_id))
+            if tag == "page" and str(self.true_id) == str(self.observed_id):
+                self.final_lines = self.lines.copy()
+            print(self.final_lines)
+
+    def feed(self, data):
+        self.rawdata = data
+        self.goahead(0)
+
+
 if __name__ == "__main__":
     print("Wikipedia archive search demo...")
     
@@ -160,3 +156,4 @@ if __name__ == "__main__":
     #commented until index is built
     #searcher.index.close()
     #---
+
