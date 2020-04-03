@@ -1,5 +1,6 @@
 .idea/
-data/input/  # Keeps the large archive and corresponding index out of version control
+data/input/ # Keeps the large archive and corresponding index out of version control
+data/output/
 
 #All output that shouldn't be in repo
 data/output/articles.csv
@@ -125,6 +126,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+virtualenv/
 
 # Spyder project settings
 .spyderproject

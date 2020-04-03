@@ -11,6 +11,8 @@ from os import PathLike
 import sqlite3
 from html.parser import HTMLParser
 
+from wikipedia.models import WikipediaArticle
+
 
 class WikipediaArchiveSearcher:
     """
@@ -31,6 +33,8 @@ class WikipediaArchiveSearcher:
         self.index = self.parse_index()
         self.retrieved_pages = {}
 
+        # self.index = self.parse_index()
+        
     def parse_index(self):
         """
         Maps each known article title to its start index, end index, title, and unique ID for fast searching later.
@@ -39,7 +43,7 @@ class WikipediaArchiveSearcher:
         conn = sqlite3.connect(OUTPUT_DATA_DIR / "pages.db")
         return conn
 
-    def retrieve_article_xml(self, title: str) -> str:
+    def retrieve_article_xml(self, title: WikipediaArticle) -> str:
         """
         Pulls the XML content of a specific Wikipedia article from the archive.
         :param title: The title of the article in question.

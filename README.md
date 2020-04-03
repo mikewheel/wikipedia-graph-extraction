@@ -7,7 +7,7 @@ Written by Maxwell Cunha, Anirudh Kamath, Jay Sherman, Michael Wheeler
   - Create a Python 3.8 Virtual Environment and activate it
   - Install dependencies: `pip install -r requirements.txt`
   - Ensure the `data/` directory has necessary assets (see the README there)
-  - Ensure that `PYTHONPATH` environment variable is correctly configured
-  - For now do `python3 wiki/reader.py`
+  - Ensure that the `PYTHONPATH` environment variable is correctly configured
+  - Run `python3 -m search`
   
-https://mwparserfromhell.readthedocs.io/en/latest/
+
