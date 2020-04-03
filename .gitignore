@@ -7,7 +7,7 @@ data/output/one_article.xml
 data/output/some_articles.xml
 data/output/xml_indices.db    #earlier verison of pages.db
 data/output/xml_indices.db-journal
-data/output/
+data/output
 data/output/pages.db
 
 
