@@ -8,8 +8,6 @@ data/output/some_articles.xml
 data/output/xml_indices.db    #earlier verison of pages.db
 data/output/xml_indices.db-journal
 data/output
-data/output/pages.db
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
