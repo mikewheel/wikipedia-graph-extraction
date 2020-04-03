@@ -1,6 +1,12 @@
 .idea/
 data/input/  # Keeps the large archive and corresponding index out of version control
-data/output
+
+#All output that shouldn't be in repo
+data/output/articles.csv
+data/output/one_article.xml
+data/output/some_articles.xml
+data/output/xml_indices.db    #earlier verison of pages.db
+data/output/xml_indices.db-journal
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
