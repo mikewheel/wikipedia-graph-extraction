@@ -1,6 +1,7 @@
 .idea/
 data/input/ # Keeps the large archive and corresponding index out of version control
 data/output/
+neo4j.json
 
 #All output that shouldn't be in repo
 data/output/articles.csv
