@@ -3,6 +3,15 @@ data/input/ # Keeps the large archive and corresponding index out of version con
 data/output/
 neo4j.json
 
+#All output that shouldn't be in repo
+data/output/articles.csv
+data/output/one_article.xml
+data/output/some_articles.xml
+data/output/xml_indices.db    #earlier verison of pages.db
+data/output/xml_indices.db-journal
+data/output/
+data/output/pages.db
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
