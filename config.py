@@ -19,3 +19,4 @@ WIKIPEDIA_INDEX_FILE: Path = INPUT_DATA_DIR / "enwiki-20200201-pages-articles-mu
 SEED_LIST: List[WikipediaArticle] = []  # TODO -- read in seed list from somewhere
 
 NEO4J_CONNECTION_PARAMETERS: Dict[str, Any] = json.load(open('neo4j.json', 'r'))
+REDIS_CONNECTION_PARAMETERS: Dict[str, Any] = json.load(open('redis.json', 'r'))
