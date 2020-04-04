@@ -30,12 +30,12 @@ class WikipediaArchiveSearcher:
 
         self.multistream_path = multistream_path
         self.index_path = index_path
-        self.index = self.parse_index()
+        self.indices = self.retrieve_indices()
         self.retrieved_pages = {}
 
         # self.index = self.parse_index()
         
-    def parse_index(self):
+    def retrieve_indices(self):
         """
         Maps each known article title to its start index, end index, title, and unique ID for fast searching later.
         :return: connection to xml_indices database, which has table named articles that holds above info
@@ -49,11 +49,11 @@ class WikipediaArchiveSearcher:
         :param title: The title of the article in question.
         :return: The decompressed text of the <page> node matching the given title.
         """
-        cursor = self.index.cursor()
+        cursor = self.indices.cursor()
 
         cursor.execute('SELECT * FROM pages WHERE title == ?', (title,))
         results = cursor.fetchall()
-        print(f'Got results: {results}')
+        print(f'Got index information: {results}')
 
         if len(results) == 0:
             raise self.ArticleNotFoundError(title)
@@ -61,10 +61,10 @@ class WikipediaArchiveSearcher:
             print(f'Got {len(results)} results for title={title}, using first one')
         start_index, page_id, title, end_index = results[0]
 
-        print("starting to extract range")
+        print("Starting partial decompression")
         xml_block = self.extract_indexed_range(start_index, end_index)
-        print("done extracting range")
-        parser = self.MWParser(id=page_id, )
+        print("Finished partial decompression")
+        parser = MWParser(id=page_id, )
         parser.feed(xml_block)
         page = "".join(parser.final_lines)
         self.retrieved_pages[title] = page
@@ -203,4 +203,4 @@ if __name__ == "__main__":
 
     with open(OUTPUT_DATA_DIR / "one_article.xml", "w", errors="ignore") as out_file:
         out_file.write(one_article)
-    searcher.index.close()
+    searcher.indices.close()
