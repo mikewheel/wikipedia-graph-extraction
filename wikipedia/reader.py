@@ -5,7 +5,7 @@ Written by Michael Wheeler and Jay Sherman.
 """
 import bz2
 from argparse import ArgumentParser
-from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, OUTPUT_DATA_DIR, INPUT_DATA_DIR
+from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, OUTPUT_DATA_DIR
 from os.path import exists
 from os import PathLike
 import sqlite3
@@ -33,8 +33,7 @@ class WikipediaArchiveSearcher:
         self.indices = self.retrieve_indices()
         self.retrieved_pages = {}
 
-        # self.index = self.parse_index()
-        
+
     def retrieve_indices(self):
         """
         Maps each known article title to its start index, end index, title, and unique ID for fast searching later.
@@ -43,7 +42,7 @@ class WikipediaArchiveSearcher:
         conn = sqlite3.connect(OUTPUT_DATA_DIR / "pages.db")
         return conn
 
-    def retrieve_article_xml(self, title: WikipediaArticle) -> str:
+    def retrieve_article_xml(self, article: WikipediaArticle) -> str:
         """
         Pulls the XML content of a specific Wikipedia article from the archive.
         :param title: The title of the article in question.
@@ -51,24 +50,31 @@ class WikipediaArchiveSearcher:
         """
         cursor = self.indices.cursor()
 
-        cursor.execute('SELECT * FROM pages WHERE title == ?', (title,))
+        cursor.execute('SELECT * FROM pages WHERE title == ?', (article.article_title,))
         results = cursor.fetchall()
         print(f'Got index information: {results}')
 
         if len(results) == 0:
-            raise self.ArticleNotFoundError(title)
+            raise self.ArticleNotFoundError(article.article_title)
         elif len(results) > 1:
-            print(f'Got {len(results)} results for title={title}, using first one')
+            print(f'Got {len(results)} results for title={article.article_title}, using first one')
         start_index, page_id, title, end_index = results[0]
 
         print("Starting partial decompression")
+        if start_index > 10000000000:
+            raise ValueError("Index too large")
         xml_block = self.extract_indexed_range(start_index, end_index)
         print("Finished partial decompression")
         parser = MWParser(id=page_id, )
         parser.feed(xml_block)
-        page = "".join(parser.final_lines)
-        self.retrieved_pages[title] = page
-        return page
+        full_xml = "".join(parser.final_lines)
+
+        article.index_key = (start_index, end_index)
+        article.full_xml = full_xml
+        article.text = parser.text
+        self.retrieved_pages[title] = article
+
+        return full_xml
 
     def extract_indexed_range(self, start_index: int, end_index: int) -> str:
         """
@@ -106,11 +112,15 @@ class MWParser(HTMLParser):
         final_lines: the lines of the XML of the page that is desired
         """
         super().__init__()
+        self.title = title
         self.true_id = id
         self.observed_id = None
         self.lines = []
         self.curr_tag_id = False
         self.final_lines = []
+        self.text = None
+        self.curr_tag_text = False
+
 
     def handle_starttag(self, tag: str, attrs: list):
         """Reads a start tag, and determines if we're reading a new page or checking an id.
@@ -129,8 +139,11 @@ class MWParser(HTMLParser):
                 self.observed_id = None
                 self.lines = []
                 self.curr_tag_id = False
+                self.text = None
             elif tag == "id":
                 self.curr_tag_id = True
+            elif tag == "text":
+                self.curr_tag_text = True
             line_components.append("<")
             line_components.append(tag)
             for tup in attrs:
@@ -144,7 +157,8 @@ class MWParser(HTMLParser):
         Does nothing if the desired page has already been found. Otherwise,
         adds the data to the list of lines of the page currently being parsed.
         If the data currently being read in is from the first id tag of the
-        page, sets self.observed_id to the data.
+        page, sets self.observed_id to the data. If the data currently being read
+        in is from the longest text tag found so far, sets self.text to the data
 
         :param data: the data between a start and end tag
         """
@@ -152,6 +166,8 @@ class MWParser(HTMLParser):
             self.lines.append(data)
             if self.curr_tag_id and self.observed_id is None:
                 self.observed_id = data
+            if self.text is None or len(self.text) < len(data):
+                self.text = data
 
     def handle_endtag(self, tag: str):
         """
@@ -169,8 +185,8 @@ class MWParser(HTMLParser):
         if not self.final_lines:
             line_components = ["</", tag, ">"]
             self.lines.append("".join(line_components))
-            if tag == "id":
-                self.curr_tag_id = False
+            self.curr_tag_id = False
+            self.curr_tag_text = False
             if tag == "page" and str(self.observed_id) == str(self.true_id):
                 self.final_lines = self.lines.copy()
 
@@ -199,7 +215,12 @@ if __name__ == "__main__":
 
     searcher = WikipediaArchiveSearcher(multistream_path=WIKIPEDIA_ARCHIVE_FILE, index_path=WIKIPEDIA_INDEX_FILE)
 
-    one_article = searcher.retrieve_article_xml(title)
+    article = WikipediaArticle(article_title= title,
+                               article_url= "/".join(["https://en.wikipedia.org/wiki",
+                                                      "_".join(title.split(" "))]))
+    one_article = searcher.retrieve_article_xml(article)
+
+    article.links()
 
     with open(OUTPUT_DATA_DIR / "one_article.xml", "w", errors="ignore") as out_file:
         out_file.write(one_article)

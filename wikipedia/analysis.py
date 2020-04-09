@@ -12,5 +12,5 @@ def classify_article_as_artist(article: WikipediaArticle) -> bool:
     :param article: MediaWiki markup as found in the Wikipedia multi-stream archive.
     :return: True if article is about a musician, else False.
     """
-    raise NotImplementedError("Write me!")
+    return "Infobox musical artist" in article.text or "==Discography==" in article.text
 
