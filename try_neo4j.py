@@ -2,7 +2,7 @@ from data_stores.neo4j import ArticleNode
 from config import NEO4J_CONNECTION_PARAMETERS
 from wikipedia.models import WikipediaArticle
 
-def main():
+if __name__ == '__main__':
     # TODO -- init connection to Neo4J using NEO4J_CONNECTION_PARAMETERS
     # TODO -- iterate over SEED_LIST: if not in data store, add_node
     print("config", NEO4J_CONNECTION_PARAMETERS)
