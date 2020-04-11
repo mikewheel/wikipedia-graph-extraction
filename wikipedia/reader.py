@@ -76,16 +76,22 @@ class WikipediaArchiveSearcher:
 
         return full_xml
 
-    def extract_indexed_range(self, start_index: int, end_index: int) -> str:
+    def extract_indexed_range(self, start_index: int, end_index: int, chunksize: int = 10000000) -> str:
         """
         Decompress a small chunk of the Wikipedia multi-stream XML bz2 file.
         :param start_index: Starting point for reading compressed bytes of interest.
         :param end_index: Stopping point for reading compressed bytes of interest.
+        :param chunksize: number of bytes to read at a time until reaching start_index
         :return: The decompressed text of the (partial) XML located between those bytes in the archive.
         """
         bz2_decom = bz2.BZ2Decompressor()
         with open(self.multistream_path, "rb") as wiki_file:
-            wiki_file.read(start_index)  # Discard the preceding bytes
+            if start_index > chunksize:
+                for i in range(chunksize, start_index, chunksize):
+                    wiki_file.read(chunksize)  # Discard the preceding bytes
+                wiki_file.read((start_index % chunksize))
+            else:
+                wiki_file.read(start_index)
             bytes_of_interest = wiki_file.read(end_index - start_index)
 
         return bz2_decom.decompress(bytes_of_interest).decode()
