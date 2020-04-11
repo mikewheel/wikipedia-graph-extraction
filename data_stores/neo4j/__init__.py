@@ -24,7 +24,13 @@ class ArticleNode(StructuredNode):
         '''
         user, pw, host, bolt_port = [N4J_CONF[a] for a in ['user', 'pass', 'host', 'bolt_port']]
         connection_url = f'bolt://{user}:{pw}@{host}:{bolt_port}'
+        #connection_url = "bolt://neo4j:L7dh7tto@localhost:7687"
         db.set_connection(connection_url)
+
+    @classmethod
+    def clear(cls):
+        cls.connect()
+        db.cypher_query("MATCH (n) DETACH DELETE n;")
 
     @classmethod
     def add_node(cls, article: WikipediaArticle) -> ArticleNode:
@@ -35,6 +41,14 @@ class ArticleNode(StructuredNode):
         :returns: the node to use so edges can be added
         '''
         cls.connect()
+        properties = vars(article)
+
+        #remove properties that don't need to be on graph
+        del properties["index_key"]
+        del properties["full_xml"]
+        #del properties["text"]     #remove this as well?
+        del properties["outgoing_links"]
+
         node = cls(properties=vars(article)) # vars() converts a class to JSON data
         node.save() # Pushes node to the db
         return node
