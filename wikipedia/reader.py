@@ -61,8 +61,6 @@ class WikipediaArchiveSearcher:
         start_index, page_id, title, end_index = results[0]
 
         print("Starting partial decompression")
-        if start_index > 10000000000:
-            raise ValueError("Index too large")
         xml_block = self.extract_indexed_range(start_index, end_index)
         print("Finished partial decompression")
         parser = MWParser(id=page_id, )
@@ -86,12 +84,7 @@ class WikipediaArchiveSearcher:
         """
         bz2_decom = bz2.BZ2Decompressor()
         with open(self.multistream_path, "rb") as wiki_file:
-            if start_index > chunksize:
-                for i in range(chunksize, start_index, chunksize):
-                    wiki_file.read(chunksize)  # Discard the preceding bytes
-                wiki_file.read((start_index % chunksize))
-            else:
-                wiki_file.read(start_index)
+            wiki_file.seek(start_index)
             bytes_of_interest = wiki_file.read(end_index - start_index)
 
         return bz2_decom.decompress(bytes_of_interest).decode()
