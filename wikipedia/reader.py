@@ -4,14 +4,17 @@ Low-level interaction with Wikipedia's multi-stream bzip2 file.
 Written by Michael Wheeler and Jay Sherman.
 """
 import bz2
+import sqlite3
+import mwparserfromhell
 from argparse import ArgumentParser
-from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, OUTPUT_DATA_DIR
+from config import OUTPUT_DATA_DIR, WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE
 from os.path import exists
 from os import PathLike
-import sqlite3
 from html.parser import HTMLParser
-
 from wikipedia.models import WikipediaArticle
+from wikipedia.analysis import classify_article_as_artist
+from data_stores.redis.article_cache import ArticleCache
+
 
 
 class WikipediaArchiveSearcher:
@@ -65,13 +68,20 @@ class WikipediaArchiveSearcher:
         print("Finished partial decompression")
         parser = MWParser(id=page_id, )
         parser.feed(xml_block)
-        full_xml = "".join(parser.final_lines)
 
         article.index_key = (start_index, end_index)
-        article.full_xml = full_xml
-        article.text = parser.text
-        self.retrieved_pages[title] = article
+        article.infobox = parser.infobox
+        article.links = [WikipediaArticle(article_title= title,
+                                          article_url= "/".join(["https://en.wikipedia.org/wiki",
+                                                                 "_".join(title.split(" "))]))
+                         for title in parser.link_titles]
 
+        #Update the cache of classifications
+        cache = ArticleCache()
+        cache.store_classification(article, parser.classification)
+
+        self.retrieved_pages[title] = article
+        full_xml = "".join(parser.final_lines)
         return full_xml
 
     def extract_indexed_range(self, start_index: int, end_index: int, chunksize: int = 10000000) -> str:
@@ -119,6 +129,9 @@ class MWParser(HTMLParser):
         self.final_lines = []
         self.text = None
         self.curr_tag_text = False
+        self.infobox = None
+        self.link_titles = None
+        self.classification = None
 
 
     def handle_starttag(self, tag: str, attrs: list):
@@ -167,6 +180,38 @@ class MWParser(HTMLParser):
                 self.observed_id = data
             if self.text is None or len(self.text) < len(data):
                 self.text = data
+                self.handle_text()
+
+    def handle_text(self):
+        """Performs all necessary options on the text of the page
+
+        Gets the titles of the outgoing links, retrieves the infobox,
+        classifies the article, and updates the cache of classifications
+        """
+
+        #Get link titles
+        #getting all content between double braces
+        titles = self.text.split("[[")
+        titles = [title.split("]]")[0] for title in titles]
+        #if there is a "|" delimiter, name of title is the before the "|"
+        titles = [title.split("|")[0] for title in titles if not "Category"]
+        self.link_titles = titles
+
+        #Get infobox
+        templates = mwparserfromhell.parse(self.text).filter_templates()
+        infoboxes = []
+        for template in templates:
+            if template.name.strip_code().startswith('Infobox'):
+                infobox = {
+                    str(p.name).strip(): p.value.strip_code().strip()
+                    for p in template.params if p.value.strip_code().strip()
+                }
+                infoboxes.append(infobox)
+        print(infoboxes)
+
+        #Get classification
+        self.classification = classify_article_as_artist(self.text)
+
 
     def handle_endtag(self, tag: str):
         """
@@ -218,8 +263,6 @@ if __name__ == "__main__":
                                article_url= "/".join(["https://en.wikipedia.org/wiki",
                                                       "_".join(title.split(" "))]))
     one_article = searcher.retrieve_article_xml(article)
-
-    article.links()
 
     with open(OUTPUT_DATA_DIR / "one_article.xml", "w", errors="ignore") as out_file:
         out_file.write(one_article)

@@ -45,8 +45,6 @@ class ArticleNode(StructuredNode):
 
         #remove properties that don't need to be on graph
         del properties["index_key"]
-        del properties["full_xml"]
-        #del properties["text"]     #remove this as well?
         del properties["outgoing_links"]
 
         node = cls(properties=vars(article)) # vars() converts a class to JSON data

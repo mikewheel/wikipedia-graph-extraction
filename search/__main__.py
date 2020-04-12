@@ -13,19 +13,31 @@ if __name__ == "__main__":
     wikipedia_searcher = WikipediaArchiveSearcher(multistream_path=WIKIPEDIA_ARCHIVE_FILE,
                                                   index_path=WIKIPEDIA_INDEX_FILE)
 
-    for artist_title in SEED_LIST:
-        add_node(artist_title)
+    for artist in SEED_LIST:
+        wikipedia_searcher.retrieve_article_xml(artist)
+        add_node(artist)
 
     search_queue = SEED_LIST
     continue_search = True
 
     # Init cache
     cache = ArticleCache()
+
+    #init counter, for termination purposes
+    counter = len(search_queue)
     
-    while continue_search:
+    while not len(search_queue) == 0 and continue_search:
         current_article = search_queue.pop(0)
-        links = current_article.links()
-        
+        links = current_article.outgoing_links
+
+        if links is None:
+            #Occurs when cache.retrieve_classification(current_article) gave true on a previous iteration,
+            #but current_article has no links object because process_page has not been run on current_article.
+            #This only occurs when current_article has the same title but is a different instance of WikipediaArticle
+            #as a previously searched Wikipedia article.
+            #TL;DR: This will only occur if we have seen this article before, so we don't need to process it.
+            continue
+
         for linked_article in links:
             # try to retrieve classification
             stored_classification = cache.retrieve_classification(linked_article)
@@ -33,10 +45,12 @@ if __name__ == "__main__":
                 # avoid re-classifying articles w/ stored classifications
                 link_is_musical_artist = stored_classification
             else:
-                # Retrieve text of linked article and classify
+                #Wikipedia article requires processing, which will update the cache of classifications
+                wikipedia_searcher.retrieve_article_xml(linked_article)
+
                 link_is_musical_artist = classify_article_as_artist(linked_article)
-                # store classification in cache
-                cache.store_classification(linked_article, link_is_musical_artist)
+                counter+=(1 if link_is_musical_artist else 0)
+
             # Add to data store if classification comes back true
             if link_is_musical_artist:
                 add_node(linked_article)
@@ -44,5 +58,5 @@ if __name__ == "__main__":
                 search_queue.append(linked_article)
             else:
                 raise NotImplementedError("TODO -- set up the Redis cache for articles we've already scraped")
-            
-        continue_search = True  # TODO -- decide what conditions on which to terminate the search
+
+        continue_search = counter == 100
