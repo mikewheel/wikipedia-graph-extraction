@@ -2,9 +2,9 @@
 Project-wide constants and settings.
 """
 
+import json
 from pathlib import Path
 from typing import Any, Dict, List
-import json
 
 from wikipedia.models import WikipediaArticle
 

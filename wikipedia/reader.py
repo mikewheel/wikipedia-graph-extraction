@@ -4,13 +4,13 @@ Low-level interaction with Wikipedia's multi-stream bzip2 file.
 Written by Michael Wheeler and Jay Sherman.
 """
 import bz2
-from argparse import ArgumentParser
-from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, OUTPUT_DATA_DIR, SQLITE_ARCHIVE_INDEX_FILE
-from os.path import exists
-from os import PathLike
 import sqlite3
+from argparse import ArgumentParser
 from html.parser import HTMLParser
+from os import PathLike
+from os.path import exists
 
+from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, OUTPUT_DATA_DIR, SQLITE_ARCHIVE_INDEX_FILE
 from wikipedia.models import WikipediaArticle
 
 

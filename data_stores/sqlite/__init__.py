@@ -1,9 +1,11 @@
 """
 Initialization of SQLite interfaces and project-specific methods.
 """
-from config import INPUT_DATA_DIR, SQLITE_ARCHIVE_INDEX_FILE
 import sqlite3
+
 import pandas
+
+from config import INPUT_DATA_DIR, SQLITE_ARCHIVE_INDEX_FILE
 
 
 def parse_colons(s):

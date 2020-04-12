@@ -2,11 +2,12 @@
 Controller module for generation of Neo4J data store entries modeling graphical relationships between
 members of the music industry on Wikipedia.
 """
-from data_stores.redis import ArticleCache
 from data_stores.neo4J import add_node, add_edge
+
+from config import SEED_LIST, WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE
+from data_stores.redis import ArticleCache
 from wikipedia.analysis import classify_article_as_artist
 from wikipedia.reader import WikipediaArchiveSearcher
-from config import SEED_LIST, WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE
 
 if __name__ == "__main__":
     # Init searcher and seed queue
