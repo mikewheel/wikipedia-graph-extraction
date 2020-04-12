@@ -5,7 +5,7 @@ Written by Michael Wheeler and Jay Sherman.
 """
 import bz2
 from argparse import ArgumentParser
-from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, OUTPUT_DATA_DIR, INPUT_DATA_DIR
+from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, OUTPUT_DATA_DIR
 from os.path import exists
 from os import PathLike
 import sqlite3
@@ -83,6 +83,7 @@ class WikipediaArchiveSearcher:
             bytes_of_interest = wiki_file.read(end_index - start_index)
 
         return bz2_decom.decompress(bytes_of_interest).decode()
+
 
 class MWParser(HTMLParser):
 
