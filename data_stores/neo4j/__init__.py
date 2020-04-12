@@ -48,8 +48,8 @@ class ArticleNode(StructuredNode):
         :returns: the node to use so edges can be added
         """
         cls.connect()
-        node = cls(properties=vars(article)) # vars() converts a class to JSON data
-        node.save() # Pushes node to the db
+        node = cls(properties=vars(article))  # vars() converts a class to JSON data
+        node.save()  # Pushes node to the db
         return node
 
     @classmethod
