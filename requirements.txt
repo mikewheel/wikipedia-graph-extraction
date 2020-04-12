@@ -1,3 +1,4 @@
 mwparserfromhell
 neomodel
 redis
+pandas

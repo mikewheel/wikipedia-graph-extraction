@@ -1,11 +1,10 @@
 """
-Creates a table relating the multistream indices
+Creates a SQLite3 table relating the multistream indices
 
 Written by Michael Wheeler and Jay Sherman.
 """
 from config import INPUT_DATA_DIR, OUTPUT_DATA_DIR
 import sqlite3
-from pathlib import Path
 import pandas
 
 
