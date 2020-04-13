@@ -16,22 +16,24 @@ if __name__ == "__main__":
                                                   index_path=WIKIPEDIA_INDEX_FILE)
 
     ArticleNode.clear()
+    search_queue = []
+
     for artist in [SEED_LIST[0]]:
         wikipedia_searcher.retrieve_article_xml(artist)
-        ArticleNode.add_node(artist)
-
-    search_queue = [SEED_LIST[0]]
-    continue_search = True
+        node = ArticleNode.add_node(artist)
+        search_queue.append(node)
 
     # Init cache
     cache = ArticleCache()
 
     #init counter, for termination purposes
     counter = len(search_queue)
-    
+
+    continue_search = True
+
     while not len(search_queue) == 0 and continue_search:
-        current_article = search_queue.pop(0)
-        links = current_article.outgoing_links
+        current_article_node = search_queue.pop(0)
+        links = current_article_node.article.outgoing_links
 
         if links is None:
             #Occurs when cache.retrieve_classification(current_article) gave true on a previous iteration,
@@ -59,8 +61,8 @@ if __name__ == "__main__":
 
             # Add to data store if classification comes back true
             if link_is_musical_artist:
-                ArticleNode.add_node(linked_article)
-                ArticleNode.add_edge(current_article, linked_article)
-                search_queue.append(linked_article)
+                child_node = ArticleNode.add_node(linked_article)
+                ArticleNode.add_edge(current_article_node, child_node)
+                search_queue.append(child_node)
 
         continue_search = counter < 20

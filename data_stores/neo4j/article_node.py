@@ -12,11 +12,25 @@ from neomodel import db, StructuredNode, JSONProperty, RelationshipTo, Relations
 
 class ArticleNode(StructuredNode):
 
-    properties = JSONProperty()  # Ideally we'd make the root class the Node class too so we can account for new variables easily
-    # But this is fine because it allows us to change variable names with less of a headache
+    properties = None
 
-    links_to = RelationshipTo('ArticleNode', 'LINKS TO')
-    linked_from = RelationshipFrom('ArticleNode', 'LINKED FROM')
+    def __init__(self, properties = None, article = None):
+
+        self.article = article
+        print("p", properties)
+        print("a", article)
+        if properties is None:
+
+            self.properties = vars(article).copy()
+            # remove properties that don't need to be on graph
+            del self.properties["index_key"]
+            del self.properties["outgoing_links"]
+        else:
+            self.properties = properties
+
+        self.links_to = RelationshipTo('ArticleNode', 'LINKS TO')
+        self.linked_from = RelationshipFrom('ArticleNode', 'LINKED FROM')
+
 
     @staticmethod
     def connect() -> None:
@@ -40,14 +54,9 @@ class ArticleNode(StructuredNode):
         :param article: the article to add
         :returns: the node to use so edges can be added
         '''
+        print('here')
         cls.connect()
-        properties = vars(article).copy()
-
-        # remove properties that don't need to be on graph
-        del properties["index_key"]
-        del properties["outgoing_links"]
-
-        node = cls(properties=properties)  # vars() converts a class to JSON data
+        node = cls(article= article)  # vars() converts a class to JSON data
         node.save()  # Pushes node to the db
         return node
 
@@ -62,6 +71,7 @@ class ArticleNode(StructuredNode):
         cls.connect()
         source_article.links_to.connect(dest_article)
 
-    @classmethod
+    '''Performs same functionality as inherited class'''
     def category(cls):
         super().category(cls)
+
