@@ -16,3 +16,4 @@ WIKIPEDIA_INDEX_FILE: Path = INPUT_DATA_DIR / "enwiki-20200201-pages-articles-mu
 
 NEO4J_CONNECTION_PARAMETERS: Dict[str, Any] = json.load(open(BASE_DIR / 'neo4j.json', 'r'))
 REDIS_CONNECTION_PARAMETERS: Dict[str, Any] = json.load(open(BASE_DIR / 'redis.json', 'r'))
+

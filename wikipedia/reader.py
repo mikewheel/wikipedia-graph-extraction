@@ -107,10 +107,14 @@ class MWParser(HTMLParser):
     to many pages.
     """
 
-    def __init__(self, id: str):
+    def __init__(self, id: str,
+                 tracked_params: list = ["birth_name", "birth_date", "birth_place", "alias", "occupation",
+                                         "years_active", "net_worth", "website", "origin", "background", "genre",
+                                         "label", "instrument", "organization"]):
         """Build a MWParser.
 
         :param id: the id of the page that is desired
+        :param tracked_params: the parameters in the wikipedia article to track
 
         The other fields are:
 
@@ -132,6 +136,7 @@ class MWParser(HTMLParser):
         self.infobox = None
         self.link_titles = None
         self.classification = None
+        self.tracked_params = tracked_params
 
 
     def handle_starttag(self, tag: str, attrs: list):
@@ -180,9 +185,9 @@ class MWParser(HTMLParser):
                 self.observed_id = data
             if self.text is None or len(self.text) < len(data):
                 self.text = data
-                self.handle_text()
+                self.process_text()
 
-    def handle_text(self):
+    def process_text(self):
         """Performs all necessary options on the text of the page
 
         Gets the titles of the outgoing links, retrieves the infobox,
@@ -199,18 +204,74 @@ class MWParser(HTMLParser):
 
         #Get infobox
         templates = mwparserfromhell.parse(self.text).filter_templates()
-        infoboxes = []
+        templates = [t for t in templates if "Infobox" in t]
+        all_params = []
         for template in templates:
-            if template.name.strip_code().startswith('Infobox'):
-                infobox = {
-                    str(p.name).strip(): p.value.strip_code().strip()
-                    for p in template.params if p.value.strip_code().strip()
-                }
-                infoboxes.append(infobox)
-        print(infoboxes)
+            all_params += template.params
+        parameters_dict = {}
+        for seen_param in all_params:
+            if "=" not in seen_param:
+                print(all_params)
+            equals_index = seen_param.index("=")
+            key = seen_param[0:equals_index]
+            value = seen_param[equals_index + 1:len(seen_param)]
+            for tracked_param in self.tracked_params:
+                if tracked_param in key:
+                    self.process_parameter(tracked_param, value, parameters_dict)
+        print("dict", parameters_dict)
+        """ for t in templates:
+            print("new")
+            for param in t.params:
+                print(param)"""
 
         #Get classification
         self.classification = classify_article_as_artist(self.text)
+        
+    def process_parameter(self, key, value, parameters_dict):
+        """Process the value based on what the key is, and update parameters_dict
+
+        :param key: the type of information contained in value, and the key for parameters_dict
+        :param value: the information stored in the parameter
+        :param parameters_dict: a store of the information related in a wiki page's parameters
+        """
+        value = value.strip()
+
+        if key == "birth_date":
+            value = value[2:len(value) - 2]
+            year, month, day = [section for section in value.split("|")
+                                if section.isdigit()]
+            value = "/".join([month, day, year])
+        elif key == "net_worth":
+            value = value.split("<ref")[0]
+            value = " ".join(value.split("&nbsp;"))
+        elif key == "website":
+            #get rid of {{URL| and }}
+            value = value[6:len(value) - 2]
+        elif key in ["birth_place", "origin"]:
+            if "[[" in value:
+                value = value[2:len(value) - 2]
+        elif key == "background":
+            value = " ".join(value.split("<!")[0].strip().split("_"))
+        elif "plainlist" in value or "flatlist" in value:
+            values = value.split("\n")
+            values = values[1:len(values)-1]
+            values = [val[1:len(val)] for val in values]
+            values = [val.strip() for val in values]
+            new_values = []
+            for val in values:
+                if "[[" in val and "|" in val:
+                    new_values.append(val.split("|")[0][2:])
+                elif "[[" in val:
+                    new_values.append(val[2:len(val)-2])
+                else:
+                    new_values.append(val)
+            value = ", ".join(new_values)
+
+        parameters_dict[key] = value
+
+
+        """["alias", "occupation", "genre", "label", "instrument", "organization"]"""
+
 
 
     def handle_endtag(self, tag: str):
