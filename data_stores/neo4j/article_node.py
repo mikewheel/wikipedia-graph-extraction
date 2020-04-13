@@ -14,25 +14,18 @@ from neomodel import db, StructuredNode, JSONProperty, RelationshipTo, Relations
 
 class ArticleNode(StructuredNode):
 
-    properties = None
+    properties = JSONProperty
+    links_to = RelationshipTo('ArticleNode', 'LINKS TO')
+    linked_from = RelationshipFrom('ArticleNode', 'LINKED FROM')
+    article = None
 
-    def __init__(self, properties = None, article = None):
+    @classmethod
+    def update_article(cls, article: WikipediaArticle) -> None:
+        """Sets the article field.
 
-        self.article = article
-        print("p", properties)
-        print("a", article)
-        if properties is None:
-
-            self.properties = vars(article).copy()
-            # remove properties that don't need to be on graph
-            del self.properties["index_key"]
-            del self.properties["outgoing_links"]
-        else:
-            self.properties = properties
-
-        self.links_to = RelationshipTo('ArticleNode', 'LINKS TO')
-        self.linked_from = RelationshipFrom('ArticleNode', 'LINKED FROM')
-
+        :param article: the article to set the article field to.
+        """
+        cls.article = article
 
     @staticmethod
     def connect() -> None:
@@ -56,10 +49,15 @@ class ArticleNode(StructuredNode):
         :param article: the article to add
         :returns: the node to use so edges can be added
         '''
-        print('here')
         cls.connect()
-        node = cls(article= article)  # vars() converts a class to JSON data
+        properties = vars(article).copy()
+        # remove properties that don't need to be on graph
+        del properties["index_key"]
+        del properties["outgoing_links"]
+
+        node = cls(properties=properties)  # vars() converts a class to JSON data
         node.save()  # Pushes node to the db
+        node.update_article(article)
         return node
 
     @classmethod

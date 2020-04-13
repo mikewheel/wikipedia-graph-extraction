@@ -52,9 +52,12 @@ if __name__ == "__main__":
                 link_is_musical_artist = stored_classification
             else:
                 #Wikipedia article requires processing, which will update the cache of classifications
-                wikipedia_searcher.retrieve_article_xml(linked_article)
+                try:
+                    wikipedia_searcher.retrieve_article_xml(linked_article)
+                    link_is_musical_artist = cache.retrieve_classification(linked_article)
+                except:
+                    link_is_musical_artist = False
 
-                link_is_musical_artist = cache.retrieve_classification(linked_article)
                 counter+=(1 if link_is_musical_artist else 0)
 
             # Add to data store if classification comes back true
@@ -63,4 +66,4 @@ if __name__ == "__main__":
                 ArticleNode.add_edge(current_article_node, child_node)
                 search_queue.append(child_node)
 
-        continue_search = counter < 20
+        continue_search = counter < 150
