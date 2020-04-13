@@ -5,7 +5,7 @@ import sqlite3
 
 import pandas
 
-from config import INPUT_DATA_DIR, SQLITE_ARCHIVE_INDEX_FILE
+from config import WIKIPEDIA_INDEX_FILE, SQLITE_ARCHIVE_INDEX_FILE
 
 
 def parse_colons(s):
@@ -20,10 +20,9 @@ def parse_colons(s):
 
 if __name__ == "__main__":
 
-    indices = pandas.read_csv(INPUT_DATA_DIR / "enwiki-20200201-pages-articles-multistream-index.txt",
-                              delimiter = "|")
+    indices = pandas.read_csv(WIKIPEDIA_INDEX_FILE, delimiter="|")
     print("done reading from csv")
-    indices_values = indices["byte:id:title"]
+    indices_values = indices["byte:id:title"]  # FIXME KeyError
     row_values = []
     for i in range(len(indices_values)):
         if i % 10000 == 0:
@@ -45,7 +44,7 @@ if __name__ == "__main__":
     for row in row_values:
         row.append(byte_dict[row[0]])
 
-    articles = pandas.DataFrame(row_values, columns = ["first_byte", "page_id", "title", "last_byte"])
+    articles = pandas.DataFrame(row_values, columns=["first_byte", "page_id", "title", "last_byte"])
 
     conn = sqlite3.connect(SQLITE_ARCHIVE_INDEX_FILE)
     cursor = conn.cursor()

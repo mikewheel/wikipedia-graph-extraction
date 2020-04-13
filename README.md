@@ -9,6 +9,7 @@ Written by Maxwell Cunha, Anirudh Kamath, Jay Sherman, Michael Wheeler
   - Install dependencies: `pip install -r requirements.txt`
   - Ensure the `data/` directory has necessary assets (see the README there)
   - Ensure that the `PYTHONPATH` environment variable is correctly configured
+  - Create a `neo4j.json` config file based on `neo4j_sample.json`
   - Run `python3 -m search`
   
 
