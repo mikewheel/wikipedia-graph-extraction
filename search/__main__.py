@@ -3,8 +3,8 @@ Controller module for generation of Neo4J data store entries modeling graphical 
 members of the music industry on Wikipedia.
 """
 from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE
-from data_stores.neo4j import ArticleNode
-from data_stores.redis import ArticleCache
+from data_stores.neo4j.article_node import ArticleNode
+from data_stores.redis.article_cache import ArticleCache
 from search.seed_artists import SEED_LIST
 from wikipedia.reader import WikipediaArchiveSearcher
 

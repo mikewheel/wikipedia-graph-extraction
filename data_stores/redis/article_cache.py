@@ -1,3 +1,9 @@
+"""
+Initialization of Redis interfaces and project-specific methods.
+
+Written by Max Cunha.
+"""
+
 from __future__ import annotations
 from config import REDIS_CONNECTION_PARAMETERS
 from redis import Redis

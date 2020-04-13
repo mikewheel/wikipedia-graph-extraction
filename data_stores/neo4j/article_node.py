@@ -2,6 +2,8 @@
 Initialization of Neo4J interfaces and project-specific methods.
 
 Neomodel crash course: https://neomodel.readthedocs.io/en/latest/getting_started.html
+
+Written by Anirudh Kamath
 """
 
 from __future__ import annotations
