@@ -55,7 +55,7 @@ class WikipediaArchiveSearcher:
 
         cursor.execute('SELECT * FROM pages WHERE title == ?', (article.article_title,))
         results = cursor.fetchall()
-        print(f'Got index information: {results}')
+        print(f'\nGot index information: {results}')
 
         if len(results) == 0:
             raise self.ArticleNotFoundError(article.article_title)
@@ -63,18 +63,18 @@ class WikipediaArchiveSearcher:
             print(f'Got {len(results)} results for title={article.article_title}, using first one')
         start_index, page_id, title, end_index = results[0]
 
-        print("Starting partial decompression")
         xml_block = self.extract_indexed_range(start_index, end_index)
-        print("Finished partial decompression")
         parser = MWParser(id=page_id, )
         parser.feed(xml_block)
 
+        print(f"Classified as {parser.classification}")
         article.index_key = (start_index, end_index)
-        article.infobox = parser.infobox
-        article.links = [WikipediaArticle(article_title= title,
-                                          article_url= "/".join(["https://en.wikipedia.org/wiki",
-                                                                 "_".join(title.split(" "))]))
-                         for title in parser.link_titles]
+        article.outgoing_links = [WikipediaArticle(article_title= title,
+                                                   article_url= "/".join(["https://en.wikipedia.org/wiki",
+                                                                          "_".join(title.split(" "))]))
+                                  for title in parser.link_titles]
+        article.infobox = parser.parameters
+
 
         #Update the cache of classifications
         cache = ArticleCache()
@@ -125,7 +125,6 @@ class MWParser(HTMLParser):
         final_lines: the lines of the XML of the page that is desired
         """
         super().__init__()
-        self.title = title
         self.true_id = id
         self.observed_id = None
         self.lines = []
@@ -133,10 +132,10 @@ class MWParser(HTMLParser):
         self.final_lines = []
         self.text = None
         self.curr_tag_text = False
-        self.infobox = None
         self.link_titles = None
         self.classification = None
         self.tracked_params = tracked_params
+        self.parameters = None
 
 
     def handle_starttag(self, tag: str, attrs: list):
@@ -193,14 +192,22 @@ class MWParser(HTMLParser):
         Gets the titles of the outgoing links, retrieves the infobox,
         classifies the article, and updates the cache of classifications
         """
+        # Get classification
+        is_musical_artist = classify_article_as_artist(self.text)
+        self.classification = is_musical_artist
+
+        if not is_musical_artist:
+            self.link_titles = []
+            self.parameters = {}
+            return 0 #exit without populating other data
 
         #Get link titles
         #getting all content between double braces
         titles = self.text.split("[[")
         titles = [title.split("]]")[0] for title in titles]
         #if there is a "|" delimiter, name of title is the before the "|"
-        titles = [title.split("|")[0] for title in titles if not "Category"]
-        self.link_titles = titles
+        titles = [title.split("|")[0] for title in titles if not "Category" in title and not "&" in title]
+        self.link_titles = titles[1:]
 
         #Get infobox
         templates = mwparserfromhell.parse(self.text).filter_templates()
@@ -208,26 +215,22 @@ class MWParser(HTMLParser):
         all_params = []
         for template in templates:
             all_params += template.params
+        all_params = [param for param in all_params
+                      if ("=" in param
+                          and param[0] != "="
+                          and param[-1:] != 0)]
         parameters_dict = {}
         for seen_param in all_params:
-            if "=" not in seen_param:
-                print(all_params)
             equals_index = seen_param.index("=")
             key = seen_param[0:equals_index]
             value = seen_param[equals_index + 1:len(seen_param)]
             for tracked_param in self.tracked_params:
                 if tracked_param in key:
                     self.process_parameter(tracked_param, value, parameters_dict)
-        print("dict", parameters_dict)
-        """ for t in templates:
-            print("new")
-            for param in t.params:
-                print(param)"""
+        self.parameters = parameters_dict
 
-        #Get classification
-        self.classification = classify_article_as_artist(self.text)
         
-    def process_parameter(self, key, value, parameters_dict):
+    def process_parameter(self, key: str, value: str, parameters_dict: dict):
         """Process the value based on what the key is, and update parameters_dict
 
         :param key: the type of information contained in value, and the key for parameters_dict
@@ -237,10 +240,11 @@ class MWParser(HTMLParser):
         value = value.strip()
 
         if key == "birth_date":
-            value = value[2:len(value) - 2]
-            year, month, day = [section for section in value.split("|")
-                                if section.isdigit()]
-            value = "/".join([month, day, year])
+            value = value.split("}}<ref")[0] if "ref" in value else value[2:len(value) - 2]
+            date = [section for section in value.split("|")
+                     if section.isdigit()]
+            if len(date) == 3:
+                parameters_dict[key] = "/".join([date[0], date[1], date[2]])
         elif key == "net_worth":
             value = value.split("<ref")[0]
             value = " ".join(value.split("&nbsp;"))
@@ -248,8 +252,10 @@ class MWParser(HTMLParser):
             #get rid of {{URL| and }}
             value = value[6:len(value) - 2]
         elif key in ["birth_place", "origin"]:
-            if "[[" in value:
-                value = value[2:len(value) - 2]
+            values = [val.strip() for val in value.split(",")]
+            values = [(val[2:len(val)-2] if "[[" in val else val)
+                      for val in values]
+            value = ", ".join(values)
         elif key == "background":
             value = " ".join(value.split("<!")[0].strip().split("_"))
         elif "plainlist" in value or "flatlist" in value:
@@ -267,12 +273,8 @@ class MWParser(HTMLParser):
                     new_values.append(val)
             value = ", ".join(new_values)
 
-        parameters_dict[key] = value
-
-
-        """["alias", "occupation", "genre", "label", "instrument", "organization"]"""
-
-
+        if key != "birth_date":
+            parameters_dict[key] = value
 
     def handle_endtag(self, tag: str):
         """

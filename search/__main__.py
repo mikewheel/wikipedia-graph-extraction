@@ -3,21 +3,24 @@ Controller module for generation of Neo4J data store entries modeling graphical 
 members of the music industry on Wikipedia.
 """
 from data_stores.redis import ArticleCache
-from data_stores.neo4J import add_node, add_edge
+from data_stores.neo4j import ArticleNode
 from wikipedia.analysis import classify_article_as_artist
 from wikipedia.reader import WikipediaArchiveSearcher
-from config import SEED_LIST, WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE
+from wikipedia.models import WikipediaArticle
+from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE
+from seed_list import SEED_LIST
 
 if __name__ == "__main__":
     # Init searcher and seed queue
     wikipedia_searcher = WikipediaArchiveSearcher(multistream_path=WIKIPEDIA_ARCHIVE_FILE,
                                                   index_path=WIKIPEDIA_INDEX_FILE)
 
-    for artist in SEED_LIST:
+    ArticleNode.clear()
+    for artist in [SEED_LIST[0]]:
         wikipedia_searcher.retrieve_article_xml(artist)
-        add_node(artist)
+        ArticleNode.add_node(artist)
 
-    search_queue = SEED_LIST
+    search_queue = [SEED_LIST[0]]
     continue_search = True
 
     # Init cache
@@ -38,6 +41,9 @@ if __name__ == "__main__":
             #TL;DR: This will only occur if we have seen this article before, so we don't need to process it.
             continue
 
+        for l in links:
+            print(l.article_title)
+
         for linked_article in links:
             # try to retrieve classification
             stored_classification = cache.retrieve_classification(linked_article)
@@ -48,15 +54,13 @@ if __name__ == "__main__":
                 #Wikipedia article requires processing, which will update the cache of classifications
                 wikipedia_searcher.retrieve_article_xml(linked_article)
 
-                link_is_musical_artist = classify_article_as_artist(linked_article)
+                link_is_musical_artist = cache.retrieve_classification(linked_article)
                 counter+=(1 if link_is_musical_artist else 0)
 
             # Add to data store if classification comes back true
             if link_is_musical_artist:
-                add_node(linked_article)
-                add_edge(current_article, linked_article)
+                ArticleNode.add_node(linked_article)
+                ArticleNode.add_edge(current_article, linked_article)
                 search_queue.append(linked_article)
-            else:
-                raise NotImplementedError("TODO -- set up the Redis cache for articles we've already scraped")
 
-        continue_search = counter == 100
+        continue_search = counter < 20

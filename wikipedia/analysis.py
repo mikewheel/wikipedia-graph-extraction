@@ -10,5 +10,6 @@ def classify_article_as_artist(article_text: str) -> bool:
     :param article_text: the text of the article to classified
     :return: True if article is about a musician, else False.
     """
-    return "Infobox musical artist" in article_text or "==Discography==" in article_text
+    classification = "Infobox musical artist" in article_text or "==Discography==" in article_text
+    return classification
 

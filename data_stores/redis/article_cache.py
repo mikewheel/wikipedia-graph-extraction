@@ -3,7 +3,6 @@ from config import REDIS_CONNECTION_PARAMETERS
 from redis import Redis
 from wikipedia.models import WikipediaArticle
 
-
 class ArticleCache:
 
     def __init__(self):
