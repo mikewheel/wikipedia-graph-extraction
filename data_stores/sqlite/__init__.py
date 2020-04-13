@@ -20,9 +20,9 @@ def parse_colons(s):
 
 if __name__ == "__main__":
 
-    indices = pandas.read_csv(WIKIPEDIA_INDEX_FILE, delimiter="|")
+    indices = pandas.read_csv(WIKIPEDIA_INDEX_FILE, delimiter="|", names=["byte:id:title"])
     print("done reading from csv")
-    indices_values = indices["byte:id:title"]  # FIXME KeyError
+    indices_values = indices["byte:id:title"]  # FIXME skip this step
     row_values = []
     for i in range(len(indices_values)):
         if i % 10000 == 0:
