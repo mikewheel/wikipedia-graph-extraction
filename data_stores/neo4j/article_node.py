@@ -45,7 +45,7 @@ class ArticleNode(StructuredNode):
     @classmethod
     def add_node(cls, article: WikipediaArticle) -> ArticleNode:
         '''
-        Adds a node to the Neo4J Database by creating a node and storing all its properties as JSON data
+        Adds or gets a node to the Neo4J Database by creating a node and storing all its properties as JSON data
 
         :param article: the article to add
         :returns: the node to use so edges can be added
