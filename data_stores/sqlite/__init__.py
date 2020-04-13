@@ -49,6 +49,7 @@ if __name__ == "__main__":
     conn = sqlite3.connect(SQLITE_ARCHIVE_INDEX_FILE)
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS articles")
+    cursor.commit()
     cursor.execute('CREATE TABLE articles (first_byte, page_id, title, last_byte)')
     cursor.execute("CREATE INDEX articles_id_idx ON articles (page_id)")
     cursor.execute("CREATE INDEX articles_title_idx ON articles (title)")
