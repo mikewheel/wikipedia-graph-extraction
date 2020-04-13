@@ -16,7 +16,7 @@ if __name__ == "__main__":
     ArticleNode.clear()
     search_queue = []
 
-    for artist in [SEED_LIST[0]]:
+    for artist in [SEED_LIST[0:2]]:
         wikipedia_searcher.retrieve_article_xml(artist)
         node = ArticleNode.add_node(artist)
         search_queue.append(node)
@@ -34,11 +34,13 @@ if __name__ == "__main__":
         links = current_article_node.article.outgoing_links
 
         if links is None:
-            #Occurs when cache.retrieve_classification(current_article) gave true on a previous iteration,
-            #but current_article has no links object because process_page has not been run on current_article.
-            #This only occurs when current_article has the same title but is a different instance of WikipediaArticle
-            #as a previously searched Wikipedia article.
-            #TL;DR: This will only occur if we have seen this article before, so we don't need to process it.
+            '''
+            Occurs when cache.retrieve_classification(current_article) gave true on a previous iteration,
+            but current_article has no links object because process_page has not been run on current_article.
+            This only occurs when current_article has the same title but is a different instance of WikipediaArticle
+            as a previously searched Wikipedia article.
+            TL;DR: This will only occur if we have seen this article before, so we don't need to process it.
+            '''
             continue
 
         for l in links:
@@ -51,7 +53,7 @@ if __name__ == "__main__":
                 # avoid re-classifying articles w/ stored classifications
                 link_is_musical_artist = stored_classification
             else:
-                #Wikipedia article requires processing, which will update the cache of classifications
+                # Wikipedia article requires processing, which will update the cache of classifications
                 try:
                     wikipedia_searcher.retrieve_article_xml(linked_article)
                     link_is_musical_artist = cache.retrieve_classification(linked_article)
@@ -62,7 +64,8 @@ if __name__ == "__main__":
 
             # Add to data store if classification comes back true
             if link_is_musical_artist:
-                child_node = ArticleNode.add_node(linked_article)
+                if stored_classification is None:  # only add a node if we haven't added this articles before
+                    child_node = ArticleNode.add_node(linked_article)
                 ArticleNode.add_edge(current_article_node, child_node)
                 search_queue.append(child_node)
 
