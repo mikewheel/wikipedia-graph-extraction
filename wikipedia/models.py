@@ -4,6 +4,7 @@ Data types generated and exposed by the Wikipedia package.
 For more information visit https://en.wikipedia.org/wiki/Wikipedia:About
 """
 from __future__ import annotations
+
 from typing import List
 
 

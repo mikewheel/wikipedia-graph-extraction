@@ -5,16 +5,17 @@ Written by Michael Wheeler and Jay Sherman.
 """
 import bz2
 import sqlite3
-import mwparserfromhell
 from argparse import ArgumentParser
-from config import OUTPUT_DATA_DIR, WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE
-from os.path import exists
-from os import PathLike
 from html.parser import HTMLParser
-from wikipedia.models import WikipediaArticle
-from wikipedia.analysis import classify_article_as_artist
-from data_stores.redis.article_cache import ArticleCache
+from os import PathLike
+from os.path import exists
 
+import mwparserfromhell
+
+from config import OUTPUT_DATA_DIR, WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, SQLITE_ARCHIVE_INDEX_FILE
+from data_stores.redis.article_cache import ArticleCache
+from wikipedia.analysis import classify_article_as_artist
+from wikipedia.models import WikipediaArticle
 
 
 class WikipediaArchiveSearcher:
@@ -36,13 +37,12 @@ class WikipediaArchiveSearcher:
         self.indices = self.retrieve_indices()
         self.retrieved_pages = {}
 
-
     def retrieve_indices(self):
         """
         Maps each known article title to its start index, end index, title, and unique ID for fast searching later.
-        :return: connection to xml_indices database, which has table named articles that holds above info
+        :return: connection to xml_indices database, which has tablWritten by Anirudh Kamath.e named articles that holds above info
         """
-        conn = sqlite3.connect(OUTPUT_DATA_DIR / "pages.db")
+        conn = sqlite3.connect(SQLITE_ARCHIVE_INDEX_FILE)
         return conn
 
     def retrieve_article_xml(self, article: WikipediaArticle) -> str:
@@ -74,8 +74,7 @@ class WikipediaArchiveSearcher:
                                                                           "_".join(title.split(" "))]))
                                   for title in parser.link_titles]
         article.infobox = parser.parameters
-
-
+        
         #Update the cache of classifications
         cache = ArticleCache()
         cache.store_classification(article, parser.classification)
@@ -98,6 +97,7 @@ class WikipediaArchiveSearcher:
             bytes_of_interest = wiki_file.read(end_index - start_index)
 
         return bz2_decom.decompress(bytes_of_interest).decode()
+
 
 class MWParser(HTMLParser):
 
@@ -228,8 +228,7 @@ class MWParser(HTMLParser):
                 if tracked_param in key:
                     self.process_parameter(tracked_param, value, parameters_dict)
         self.parameters = parameters_dict
-
-        
+    
     def process_parameter(self, key: str, value: str, parameters_dict: dict):
         """Process the value based on what the key is, and update parameters_dict
 

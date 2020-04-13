@@ -17,4 +17,3 @@ if __name__ == '__main__':
     print(f'Classification for a music article: {cache.retrieve_classification(music_article)}')
     print(f'Classification for a non-music article: {cache.retrieve_classification(not_music_article)}')
     print(f'Classification for an article not in the cache: {cache.retrieve_classification(unstored_article)}')
-    exit(0)
