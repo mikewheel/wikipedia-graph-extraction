@@ -4,6 +4,7 @@ Project-wide constants and settings.
 from logging import getLogger, FileHandler, StreamHandler, Formatter, DEBUG, INFO
 import json
 from pathlib import Path
+from textwrap import dedent
 from typing import Any, Dict, List
 from sys import stdout
 
@@ -20,6 +21,17 @@ NEO4J_CONNECTION_PARAMETERS: Dict[str, Any] = json.load(open(BASE_DIR / 'neo4j.j
 REDIS_CONNECTION_PARAMETERS: Dict[str, Any] = json.load(open(BASE_DIR / 'redis.json', 'r'))
 NEO4J_ENCRYPTED = False  # https://github.com/neo4j-contrib/neomodel/issues/485
 
+COOL_ASCII_ART_HEADER = dedent("""\n
+ #     #                                                                     #     #
+ #  #  # # #    # # #####  ###### #####  #   ##      ######  ####  #####     ##   ## #    #  ####  #  ####
+ #  #  # # #   #  # #    # #      #    # #  #  #     #      #    # #    #    # # # # #    # #      # #    #
+ #  #  # # ####   # #    # #####  #    # # #    #    #####  #    # #    #    #  #  # #    #  ####  # #
+ #  #  # # #  #   # #####  #      #    # # ######    #      #    # #####     #     # #    #      # # #
+ #  #  # # #   #  # #      #      #    # # #    #    #      #    # #   #     #     # #    # #    # # #    #
+  ## ##  # #    # # #      ###### #####  # #    #    #       ####  #    #    #     #  ####   ####  #  ####
+""")
+
+LOG_UPDATE_SEARCH_EVERY = 10000
 
 def make_logger(module_name):
     logger = getLogger(module_name)

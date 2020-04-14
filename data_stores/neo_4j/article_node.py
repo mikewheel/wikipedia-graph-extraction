@@ -7,12 +7,14 @@ Written by Anirudh Kamath
 """
 
 from __future__ import annotations
-from config import NEO4J_CONNECTION_PARAMETERS as N4J_CONF, NEO4J_ENCRYPTED
+from config import NEO4J_CONNECTION_PARAMETERS as N4J_CONF, NEO4J_ENCRYPTED, make_logger
 from wikipedia.models import WikipediaArticle
 from neomodel import db, StructuredNode, JSONProperty, RelationshipTo, RelationshipFrom, StringProperty
 from neomodel import config as neomodel_config
 
 neomodel_config.ENCRYPTED_CONNECTION = NEO4J_ENCRYPTED
+
+logger = make_logger(__name__)
 
 
 class ArticleNode(StructuredNode):
@@ -34,17 +36,20 @@ class ArticleNode(StructuredNode):
 
     @staticmethod
     def connect() -> None:
-        '''
+        """"
         Connects to the Neo4J instance
-        '''
+        """
         user, pw, host, bolt_port = [N4J_CONF[a] for a in ['user', 'pass', 'host', 'bolt_port']]
         connection_url = f'bolt://{user}:{pw}@{host}:{bolt_port}'
+        logger.debug(f'Connecting to Neo4J: {connection_url}')
         db.set_connection(connection_url)
 
     @classmethod
     def clear(cls):
         cls.connect()
-        db.cypher_query("MATCH (n) DETACH DELETE n;")
+        query_txt = "MATCH (n) DETACH DELETE n;"
+        logger.debug(f'Executing clear: {query_txt}')
+        db.cypher_query(query_txt)
 
     @classmethod
     def add_node(cls, article: WikipediaArticle) -> ArticleNode:
