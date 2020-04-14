@@ -14,7 +14,7 @@ from neomodel import db, StructuredNode, JSONProperty, RelationshipTo, Relations
 
 class ArticleNode(StructuredNode):
 
-    properties = JSONProperty
+    properties = JSONProperty()
     links_to = RelationshipTo('ArticleNode', 'LINKS TO')
     linked_from = RelationshipFrom('ArticleNode', 'LINKED FROM')
     article = None

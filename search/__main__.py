@@ -16,7 +16,7 @@ if __name__ == "__main__":
     ArticleNode.clear()
     search_queue = []
 
-    for artist in [SEED_LIST[0:2]]:
+    for artist in [SEED_LIST[31]]:
         wikipedia_searcher.retrieve_article_xml(artist)
         node = ArticleNode.add_node(artist)
         search_queue.append(node)
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     continue_search = True
 
-    while not len(search_queue) == 0 and continue_search:
+    while continue_search:
         current_article_node = search_queue.pop(0)
         links = current_article_node.article.outgoing_links
 
@@ -41,21 +41,24 @@ if __name__ == "__main__":
             as a previously searched Wikipedia article.
             TL;DR: This will only occur if we have seen this article before, so we don't need to process it.
             '''
+            continue_search = counter < 150 and len(search_queue) != 0
             continue
 
         for l in links:
             print(l.article_title)
 
         for linked_article in links:
+            print(linked_article)
             # try to retrieve classification
             stored_classification = cache.retrieve_classification(linked_article)
             if stored_classification is not None:
                 # avoid re-classifying articles w/ stored classifications
                 link_is_musical_artist = stored_classification
             else:
-                # Wikipedia article requires processing, which will update the cache of classifications
                 try:
+                    print("1", linked_article.out_going_links)
                     wikipedia_searcher.retrieve_article_xml(linked_article)
+                    print("2", linked_article.out_going_links)
                     link_is_musical_artist = cache.retrieve_classification(linked_article)
                 except:
                     link_is_musical_artist = False
@@ -72,4 +75,7 @@ if __name__ == "__main__":
                 # add an edge between current article and its outgoing link
                 ArticleNode.add_edge(current_article_node, linked_article_node)
 
-        continue_search = counter < 150
+        continue_search = counter < 150 and len(search_queue) != 0
+
+
+
