@@ -30,8 +30,7 @@ if __name__ == "__main__":
 
     continue_search = True
     while continue_search:
-        "here"
-        current_article = search_queue.pop()
+        current_article = search_queue.pop(0)
         links = current_article.outgoing_links
 
         if links is None:
