@@ -25,7 +25,7 @@ if __name__ == "__main__":
     indices_values = indices.iloc[:, 0]
     row_values = []
     for i in range(len(indices_values)):
-        if i % 10000 == 0:
+        if i % 100000 == 0:
             print(i)
         line = indices_values[i]
         row_values.append(parse_colons(line))
@@ -48,10 +48,12 @@ if __name__ == "__main__":
 
     conn = sqlite3.connect(SQLITE_ARCHIVE_INDEX_FILE)
     cursor = conn.cursor()
-    cursor.execute("DROP TABLE IF EXISTS articles")
-    cursor.execute('CREATE TABLE articles (first_byte, page_id, title, last_byte)')
-    cursor.execute("CREATE INDEX articles_id_idx ON articles (page_id)")
-    cursor.execute("CREATE INDEX articles_title_idx ON articles (title)")
+    cursor.execute("DROP TABLE IF EXISTS articles;")
+    conn.commit()
+    # cursor.execute('CREATE TABLE articles (first_byte, page_id, title, last_byte)')
     articles.to_sql("articles", conn)
+    conn.commit()
+    cursor.execute("CREATE INDEX articles_id_idx ON articles (page_id);")
+    cursor.execute("CREATE INDEX articles_title_idx ON articles (title);")
     conn.commit()
     conn.close()
