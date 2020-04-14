@@ -1,10 +1,11 @@
 """
 Project-wide constants and settings.
 """
-
+from logging import getLogger, FileHandler, StreamHandler, Formatter, DEBUG, INFO
 import json
 from pathlib import Path
 from typing import Any, Dict, List
+from sys import stdout
 
 BASE_DIR: Path = Path(__file__).parent
 DATA_DIR: Path = BASE_DIR / "data"
@@ -18,3 +19,21 @@ WIKIPEDIA_INDEX_FILE: Path = INPUT_DATA_DIR / "enwiki-20200201-pages-articles-mu
 NEO4J_CONNECTION_PARAMETERS: Dict[str, Any] = json.load(open(BASE_DIR / 'neo4j.json', 'r'))
 REDIS_CONNECTION_PARAMETERS: Dict[str, Any] = json.load(open(BASE_DIR / 'redis.json', 'r'))
 NEO4J_ENCRYPTED = False  # https://github.com/neo4j-contrib/neomodel/issues/485
+
+
+def make_logger(module_name):
+    logger = getLogger(module_name)
+    logger.setLevel(DEBUG)
+    formatter = Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+    
+    file_handler = FileHandler(OUTPUT_DATA_DIR / "search.log", mode="a")
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(DEBUG)
+    
+    stdout_handler = StreamHandler(stdout)
+    stdout_handler.setFormatter(formatter)
+    stdout_handler.setLevel(INFO)
+    
+    logger.addHandler(file_handler)
+    logger.addHandler(stdout_handler)
+    return logger
