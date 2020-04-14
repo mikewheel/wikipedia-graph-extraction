@@ -55,24 +55,21 @@ class WikipediaArchiveSearcher:
 
         cursor.execute('SELECT * FROM pages WHERE title == ?', (article.article_title,))
         results = cursor.fetchall()
-        print(f'\nGot index information: {results}')
+        # print(f'\nGot index information: {results}')
 
         if len(results) == 0:
             raise self.ArticleNotFoundError(article.article_title)
-        elif len(results) > 1:
-            print(f'Got {len(results)} results for title={article.article_title}, using first one')
         start_index, page_id, title, end_index = results[0]
 
         xml_block = self.extract_indexed_range(start_index, end_index)
         parser = MWParser(id=page_id, )
         parser.feed(xml_block)
 
-        print(f"Classified as {parser.classification}")
         article.index_key = (start_index, end_index)
         article.outgoing_links = [WikipediaArticle(article_title= title,
                                                    article_url= "/".join(["https://en.wikipedia.org/wiki",
                                                                           "_".join(title.split(" "))]))
-                                  for title in parser.link_titles]
+                                  for title in set(parser.link_titles)]
         article.infobox = parser.parameters
         
         # Update the cache of classifications

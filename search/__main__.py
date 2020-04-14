@@ -12,25 +12,25 @@ if __name__ == "__main__":
     # Init searcher and seed queue
     wikipedia_searcher = WikipediaArchiveSearcher(multistream_path=WIKIPEDIA_ARCHIVE_FILE,
                                                   index_path=WIKIPEDIA_INDEX_FILE)
-
     ArticleNode.clear()
     search_queue = []
 
-    for artist in [SEED_LIST[31]]:
+    for artist in SEED_LIST[30:32]:
         wikipedia_searcher.retrieve_article_xml(artist)
         node = ArticleNode.add_node(artist)
         search_queue.append(node)
 
     # Init cache
     cache = ArticleCache()
+    cache.clear()
 
-    #init counter, for termination purposes
+    # init counter, for termination purposes
     counter = len(search_queue)
 
     continue_search = True
-
     while continue_search:
-        current_article_node = search_queue.pop(0)
+        current_article_node = search_queue.pop()
+        print(f'***************NEW PARENT: {current_article_node.article.article_title}*****************')
         links = current_article_node.article.outgoing_links
 
         if links is None:
@@ -44,26 +44,24 @@ if __name__ == "__main__":
             continue_search = counter < 150 and len(search_queue) != 0
             continue
 
-        for l in links:
-            print(l.article_title)
-
         for linked_article in links:
-            print(linked_article)
+            print(f'NEW LINK: {linked_article.article_title}')
             # try to retrieve classification
             stored_classification = cache.retrieve_classification(linked_article)
             if stored_classification is not None:
+                print('THIS LINK HAS BEEN SEEN BEFORE')
                 # avoid re-classifying articles w/ stored classifications
                 link_is_musical_artist = stored_classification
             else:
                 try:
-                    print("1", linked_article.out_going_links)
                     wikipedia_searcher.retrieve_article_xml(linked_article)
-                    print("2", linked_article.out_going_links)
                     link_is_musical_artist = cache.retrieve_classification(linked_article)
-                except:
+                except WikipediaArchiveSearcher.ArticleNotFoundError:
                     link_is_musical_artist = False
 
-                counter += (1 if link_is_musical_artist else 0)
+            print(f'linked article {linked_article.article_title} is classified as {link_is_musical_artist}')
+            print(f'linked article infobox is {linked_article.infobox}')
+            counter += (1 if link_is_musical_artist else 0)
 
             # Add to data store if classification comes back true
             if link_is_musical_artist:

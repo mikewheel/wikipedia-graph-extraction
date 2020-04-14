@@ -14,6 +14,12 @@ class ArticleCache:
     def __init__(self):
         self._conn = Redis(REDIS_CONNECTION_PARAMETERS['host'], REDIS_CONNECTION_PARAMETERS['port'])
 
+    def clear(self) -> None:
+        """
+        Clear the database (called only upon search initialization).
+        """
+        self._conn.flushall()
+
     def store_classification(self, article: WikipediaArticle, is_musical_artist: bool) -> None:
         """
         Add a key-value pair in the Redis cache indicating whether the given article is a musical artist or not.

@@ -9,12 +9,14 @@ Written by Anirudh Kamath
 from __future__ import annotations
 from config import NEO4J_CONNECTION_PARAMETERS as N4J_CONF
 from wikipedia.models import WikipediaArticle
-from neomodel import db, StructuredNode, JSONProperty, RelationshipTo, RelationshipFrom
+from neomodel import db, StructuredNode, JSONProperty, RelationshipTo, RelationshipFrom, StringProperty
 
 
 class ArticleNode(StructuredNode):
 
     properties = JSONProperty()
+    article_id = StringProperty()
+    article_title = StringProperty()
     links_to = RelationshipTo('ArticleNode', 'LINKS TO')
     linked_from = RelationshipFrom('ArticleNode', 'LINKED FROM')
     article = None
@@ -50,18 +52,19 @@ class ArticleNode(StructuredNode):
         :param article: the article to add
         :returns: the node to use so edges can be added
         '''
+
         cls.connect()
-        properties = vars(article).copy()
-        # remove properties that don't need to be on graph
-        del properties["index_key"]
-        del properties["outgoing_links"]
-        
-        node = cls.nodes.get_or_none(properties=properties)
+        properties = article.infobox.copy()
+        id = article.article_url
+        title = article.article_title
+
+        node = cls.nodes.get_or_none(article_id=id)
+        print(node)
         
         if node:
             return node
         
-        node = cls(properties=properties)  # vars() converts a class to JSON data
+        node = cls(article_id=id, article_title=title, properties=properties)  # vars() converts a class to JSON data
         node.save()  # Pushes node to the db
         node.update_article(article)
         return node
