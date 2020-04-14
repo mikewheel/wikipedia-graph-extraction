@@ -15,10 +15,11 @@ if __name__ == "__main__":
     ArticleNode.clear()
     search_queue = []
 
-    for artist in SEED_LIST[30:32]:
+    for artist in SEED_LIST:
         wikipedia_searcher.retrieve_article_xml(artist)
         ArticleNode.add_node(artist)
         search_queue.append(artist)
+    print("Finished adding seed list ")
 
     # Init cache
     cache = ArticleCache()
@@ -29,6 +30,7 @@ if __name__ == "__main__":
 
     continue_search = True
     while continue_search:
+        "here"
         current_article = search_queue.pop()
         links = current_article.outgoing_links
 
@@ -56,7 +58,6 @@ if __name__ == "__main__":
                 except WikipediaArchiveSearcher.ArticleNotFoundError:
                     link_is_musical_artist = False
 
-            counter += (1 if link_is_musical_artist else 0)
 
             # Add to data store if classification comes back true
             if link_is_musical_artist:
@@ -64,13 +65,15 @@ if __name__ == "__main__":
                 linked_article_node = ArticleNode.add_node(linked_article)  # gets existing or adds new if none exists
                 # check if node has been seen before adding to search queue
                 if node_is_new:
+                    counter +=1
                     search_queue.append(linked_article)
                 # add an edge between current article and its outgoing link
                 # get node for current artist and add edge between it and linked article
                 current_article_node = ArticleNode.retrieve_node(current_article)
                 ArticleNode.add_edge(current_article_node, linked_article_node)
 
-        continue_search = counter < 150 and len(search_queue) != 0
+        print("counter:", counter)
+        continue_search = counter < 500 and len(search_queue) != 0
 
 
 

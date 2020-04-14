@@ -205,7 +205,8 @@ class MWParser(HTMLParser):
         titles = [title.split("]]")[0] for title in titles]
         #if there is a "|" delimiter, name of title is the before the "|"
         titles = [title.split("|")[0] for title in titles if not "Category" in title and not "&" in title]
-        self.link_titles = titles[1:]
+        titles = titles[1:]
+        self.link_titles = ["".join(t.split("'")) for t in titles]
 
         #Get infobox
         templates = mwparserfromhell.parse(self.text).filter_templates()
