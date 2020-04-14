@@ -22,7 +22,7 @@ class WikipediaArticle:
 
 
     def __str__(self):
-        return "".join(["title: ", self.article_title, "\n",
+        return "".join(["title: ", self.article_title, ", ",
                         "infobox: ", (str(self.infobox) if self.infobox is not None else "None")])
 
     def links(self) -> List[WikipediaArticle]:
