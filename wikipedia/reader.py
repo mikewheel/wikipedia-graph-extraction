@@ -75,7 +75,7 @@ class WikipediaArchiveSearcher:
                                   for title in parser.link_titles]
         article.infobox = parser.parameters
         
-        #Update the cache of classifications
+        # Update the cache of classifications
         cache = ArticleCache()
         cache.store_classification(article, parser.classification)
 
