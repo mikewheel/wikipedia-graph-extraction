@@ -64,13 +64,12 @@ if __name__ == "__main__":
 
             # Add to data store if classification comes back true
             if link_is_musical_artist:
-                add_new_node = stored_classification is None
-                if add_new_node:  # if the node does not exist, create one and add it to the queue to be searched
-                    linked_article_node = ArticleNode.add_node(linked_article)
+                node_is_new = stored_classification is None
+                linked_article_node = ArticleNode.add_node(linked_article)  # gets existing or adds new if none exists
+                # check if node has been seen before adding to search queue
+                if node_is_new:
                     search_queue.append(linked_article_node)
-                else:  # if the node exists, fetch it from the database
-                    linked_article_node = ArticleNode.get_node(linked_article)
-
+                # add an edge between current article and its outgoing link
                 ArticleNode.add_edge(current_article_node, linked_article_node)
 
         continue_search = counter < 150
