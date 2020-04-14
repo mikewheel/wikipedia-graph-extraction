@@ -23,16 +23,11 @@ if __name__ == "__main__":
     
     logger.info("Constructing the seed list...")
     search_queue = []
-<<<<<<< HEAD
-    for artist in SEED_LIST[30:32]:
-=======
 
     for artist in SEED_LIST:
->>>>>>> origin/run-and-troubleshoot-search
         wikipedia_searcher.retrieve_article_xml(artist)
         ArticleNode.add_node(artist)
         search_queue.append(artist)
-    print("Finished adding seed list ")
 
     logger.info("Initializing search cache...")
     cache = ArticleCache()
@@ -44,13 +39,9 @@ if __name__ == "__main__":
     
     logger.info("Starting the breadth-first search of Wikipedia")
     while continue_search:
-<<<<<<< HEAD
         if counter % LOG_UPDATE_SEARCH_EVERY == 0:
             logger.info(f'Search has reached {counter} nodes...')
         
-=======
-        "here"
->>>>>>> origin/run-and-troubleshoot-search
         current_article = search_queue.pop()
         links = current_article.outgoing_links
         logger.info(f'\tCurrent article: {current_article.article_title}\n\tOutgoing links: {len(links)}')
@@ -78,8 +69,7 @@ if __name__ == "__main__":
                     link_is_musical_artist = cache.retrieve_classification(linked_article)
                 except WikipediaArchiveSearcher.ArticleNotFoundError:
                     link_is_musical_artist = False
-
-
+                    
             # Add to data store if classification comes back true
             if link_is_musical_artist:
                 logger.info(f'Creating edge: {current_article.article_title} -> {linked_article}')
@@ -93,8 +83,7 @@ if __name__ == "__main__":
                 # get node for current artist and add edge between it and linked article
                 current_article_node = ArticleNode.retrieve_node(current_article)
                 ArticleNode.add_edge(current_article_node, linked_article_node)
-
-        print("counter:", counter)
+                
         continue_search = counter < 500 and len(search_queue) != 0
 
 
