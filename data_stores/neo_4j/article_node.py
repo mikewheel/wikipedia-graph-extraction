@@ -7,9 +7,12 @@ Written by Anirudh Kamath
 """
 
 from __future__ import annotations
-from config import NEO4J_CONNECTION_PARAMETERS as N4J_CONF
+from config import NEO4J_CONNECTION_PARAMETERS as N4J_CONF, NEO4J_ENCRYPTED
 from wikipedia.models import WikipediaArticle
 from neomodel import db, StructuredNode, JSONProperty, RelationshipTo, RelationshipFrom, StringProperty
+from neomodel import config as neomodel_config
+
+neomodel_config.ENCRYPTED_CONNECTION = NEO4J_ENCRYPTED
 
 
 class ArticleNode(StructuredNode):

@@ -13,7 +13,7 @@ from os.path import exists
 import mwparserfromhell
 
 from config import OUTPUT_DATA_DIR, WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, SQLITE_ARCHIVE_INDEX_FILE
-from data_stores.redis.article_cache import ArticleCache
+from data_stores.redis_.article_cache import ArticleCache
 from wikipedia.analysis import classify_article_as_artist
 from wikipedia.models import WikipediaArticle
 
@@ -53,13 +53,16 @@ class WikipediaArchiveSearcher:
         """
         cursor = self.indices.cursor()
 
-        cursor.execute('SELECT * FROM pages WHERE title == ?', (article.article_title,))
+        cursor.execute('SELECT * FROM articles WHERE title == ?', (article.article_title,))
         results = cursor.fetchall()
         # print(f'\nGot index information: {results}')
 
         if len(results) == 0:
             raise self.ArticleNotFoundError(article.article_title)
-        start_index, page_id, title, end_index = results[0]
+        sqlite_table_index, start_index, page_id, title, end_index = results[0]
+        start_index = int(start_index)
+        end_index = int(end_index)
+        page_id = int(page_id)
         title = "".join(title.split("'"))
 
         xml_block = self.extract_indexed_range(start_index, end_index)

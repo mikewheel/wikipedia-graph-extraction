@@ -1,4 +1,4 @@
-from data_stores.redis import ArticleCache
+from data_stores.redis_ import ArticleCache
 from wikipedia.models import WikipediaArticle
 
 if __name__ == '__main__':
