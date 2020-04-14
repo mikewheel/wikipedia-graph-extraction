@@ -93,16 +93,16 @@ class ArticleNode(StructuredNode):
 
     @classmethod
     def add_edge(cls, source_article: ArticleNode, dest_article: ArticleNode) -> None:
-        '''
+        """
         Connects one node to another
 
         :param source_article: the article pointing to the destination
         :param dest_article: the destination article to be pointed to
-        '''
+        """
         cls.connect()
         source_article.links_to.connect(dest_article)
-
-    '''Performs same functionality as inherited class'''
+        
     def category(cls):
+        """Performs same functionality as inherited class"""
         super().category(cls)
 
