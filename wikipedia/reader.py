@@ -60,6 +60,7 @@ class WikipediaArchiveSearcher:
         if len(results) == 0:
             raise self.ArticleNotFoundError(article.article_title)
         start_index, page_id, title, end_index = results[0]
+        title = "".join(title.split("'"))
 
         xml_block = self.extract_indexed_range(start_index, end_index)
         parser = MWParser(id=page_id, )
@@ -247,15 +248,26 @@ class MWParser(HTMLParser):
         elif key == "website":
             #get rid of {{URL| and }}
             value = value[6:len(value) - 2]
+        elif key == "years_active":
+            value = "-".join(value.split("\u2013"))
         elif key in ["birth_place", "origin"]:
+            new_values = []
+            value = value.split("<ref")[0]
             values = [val.strip() for val in value.split(",")]
-            values = [(val[2:len(val)-2] if "[[" in val else val)
-                      for val in values]
-            value = ", ".join(values)
+            for entry in values:
+                val = entry.strip()
+                vals = val.split("|")
+                vals = [(val[2:] if "[[" in val else val)
+                        for val in vals]
+                vals = [(val[:len(val) - 2] if "]]" in val else val)
+                        for val in vals]
+                new_values.append(", ".join(vals))
+            value = ", ".join(list(set(new_values)))
         elif key == "background":
             value = " ".join(value.split("<!")[0].strip().split("_"))
-        elif "plainlist" in value or "flatlist" in value:
-            values = value.split("\n")
+
+        elif "flatlist" in value or "plainlist" in value or  "hlist" in value:
+            values = value.split("\n") if "\n" in value else value.split(",")
             values = values[1:len(values)-1]
             values = [val[1:len(val)] for val in values]
             values = [val.strip() for val in values]
@@ -268,6 +280,15 @@ class MWParser(HTMLParser):
                 else:
                     new_values.append(val)
             value = ", ".join(new_values)
+
+        elif "[[" in value:
+            values = value.split(", ")
+            values = [val.split("|")[0] for val in values]
+            values =  [(val[2:] if "[[" in val else val)
+                       for val in values]
+            values = [(val[:len(val) - 2] if "]]" in val else val)
+                       for val in values]
+            value = ", ".join(values)
 
         if key != "birth_date":
             parameters_dict[key] = value
