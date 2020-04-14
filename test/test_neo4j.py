@@ -1,5 +1,5 @@
 from config import NEO4J_CONNECTION_PARAMETERS
-from data_stores.neo4j import ArticleNode
+from data_stores.neo_4j import ArticleNode
 from wikipedia.models import WikipediaArticle
 
 if __name__ == "__main__":
