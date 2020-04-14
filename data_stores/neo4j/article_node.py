@@ -21,14 +21,13 @@ class ArticleNode(StructuredNode):
     linked_from = RelationshipFrom('ArticleNode', 'LINKED FROM')
     article = None
 
-    @classmethod
-    def update_article(cls, article: WikipediaArticle) -> None:
+    def update_article(self, article: WikipediaArticle) -> None:
         """
         Sets the article field.
 
         :param article: the article to set the article field to.
         """
-        cls.article = article
+        self.article = article
 
     @staticmethod
     def connect() -> None:
@@ -54,20 +53,35 @@ class ArticleNode(StructuredNode):
         '''
 
         cls.connect()
-        properties = article.infobox.copy()
-        id = article.article_url
+        properties = article.infobox
+        article_id = article.article_url
         title = article.article_title
 
-        node = cls.nodes.get_or_none(article_id=id)
-        print(node)
-        
-        if node:
-            return node
-        
-        node = cls(article_id=id, article_title=title, properties=properties)  # vars() converts a class to JSON data
+        # node = cls.nodes.get_or_none(article_id=article_id)
+        results, meta = db.cypher_query("""MATCH (s) WHERE s.article_id = '""" + article_id + """' RETURN s""")
+        nodes = [cls.inflate(row[0]) for row in results]
+
+        if nodes:
+            nodes[0].article = article
+            return nodes[0]
+
+        node = cls(article_id=article_id, article_title=title, properties=properties)  # vars() converts a class to JSON data
         node.save()  # Pushes node to the db
-        node.update_article(article)
+        node.article = article
         return node
+
+    @classmethod
+    def retrieve_node(cls, article: WikipediaArticle) -> ArticleNode:
+        results, meta = db.cypher_query("""MATCH (s) WHERE s.article_id = '""" + article.article_url + """' RETURN s""")
+        nodes = [cls.inflate(row[0]) for row in results]
+        if nodes:
+            return nodes[0]
+
+    # @classmethod
+    # def retrieve_edge(cls, source_article: ArticleNode, dest_article: ArticleNode):
+    #     results, meta = db.cypher_query('MATCH (t:Track {spotify_id: "%s"})-[:`FEATURED IN`]->(p:Playlist) RETURN p'
+    #                                     % spotify_id)
+    #     return [Playlist.inflate(row[0]) for row in results]
 
     @classmethod
     def add_edge(cls, source_article: ArticleNode, dest_article: ArticleNode) -> None:

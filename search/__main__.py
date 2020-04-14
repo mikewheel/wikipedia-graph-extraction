@@ -17,8 +17,8 @@ if __name__ == "__main__":
 
     for artist in SEED_LIST[30:32]:
         wikipedia_searcher.retrieve_article_xml(artist)
-        node = ArticleNode.add_node(artist)
-        search_queue.append(node)
+        ArticleNode.add_node(artist)
+        search_queue.append(artist)
 
     # Init cache
     cache = ArticleCache()
@@ -29,9 +29,8 @@ if __name__ == "__main__":
 
     continue_search = True
     while continue_search:
-        current_article_node = search_queue.pop()
-        print(f'***************NEW PARENT: {current_article_node.article.article_title}*****************')
-        links = current_article_node.article.outgoing_links
+        current_article = search_queue.pop()
+        links = current_article.outgoing_links
 
         if links is None:
             '''
@@ -45,11 +44,9 @@ if __name__ == "__main__":
             continue
 
         for linked_article in links:
-            print(f'NEW LINK: {linked_article.article_title}')
             # try to retrieve classification
             stored_classification = cache.retrieve_classification(linked_article)
             if stored_classification is not None:
-                print('THIS LINK HAS BEEN SEEN BEFORE')
                 # avoid re-classifying articles w/ stored classifications
                 link_is_musical_artist = stored_classification
             else:
@@ -59,8 +56,6 @@ if __name__ == "__main__":
                 except WikipediaArchiveSearcher.ArticleNotFoundError:
                     link_is_musical_artist = False
 
-            print(f'linked article {linked_article.article_title} is classified as {link_is_musical_artist}')
-            print(f'linked article infobox is {linked_article.infobox}')
             counter += (1 if link_is_musical_artist else 0)
 
             # Add to data store if classification comes back true
@@ -69,8 +64,10 @@ if __name__ == "__main__":
                 linked_article_node = ArticleNode.add_node(linked_article)  # gets existing or adds new if none exists
                 # check if node has been seen before adding to search queue
                 if node_is_new:
-                    search_queue.append(linked_article_node)
+                    search_queue.append(linked_article)
                 # add an edge between current article and its outgoing link
+                # get node for current artist and add edge between it and linked article
+                current_article_node = ArticleNode.retrieve_node(current_article)
                 ArticleNode.add_edge(current_article_node, linked_article_node)
 
         continue_search = counter < 150 and len(search_queue) != 0
