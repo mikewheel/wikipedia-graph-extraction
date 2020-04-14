@@ -21,7 +21,8 @@ class ArticleNode(StructuredNode):
 
     @classmethod
     def update_article(cls, article: WikipediaArticle) -> None:
-        """Sets the article field.
+        """
+        Sets the article field.
 
         :param article: the article to set the article field to.
         """
@@ -44,7 +45,7 @@ class ArticleNode(StructuredNode):
     @classmethod
     def add_node(cls, article: WikipediaArticle) -> ArticleNode:
         '''
-        Adds a node to the Neo4J Database by creating a node and storing all its properties as JSON data
+        Adds or gets a node to the Neo4J Database by creating a node and storing all its properties as JSON data
 
         :param article: the article to add
         :returns: the node to use so edges can be added
@@ -54,7 +55,12 @@ class ArticleNode(StructuredNode):
         # remove properties that don't need to be on graph
         del properties["index_key"]
         del properties["outgoing_links"]
-
+        
+        node = cls.nodes.get_or_none(properties=properties)
+        
+        if node:
+            return node
+        
         node = cls(properties=properties)  # vars() converts a class to JSON data
         node.save()  # Pushes node to the db
         node.update_article(article)
