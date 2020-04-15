@@ -12,10 +12,12 @@ from os.path import exists
 
 import mwparserfromhell
 
-from config import OUTPUT_DATA_DIR, WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, SQLITE_ARCHIVE_INDEX_FILE
+from config import OUTPUT_DATA_DIR, WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, SQLITE_ARCHIVE_INDEX_FILE, make_logger
 from data_stores.redis_.article_cache import ArticleCache
 from wikipedia.analysis import classify_article_as_artist
 from wikipedia.models import WikipediaArticle
+
+logger = make_logger(__name__)
 
 
 class WikipediaArchiveSearcher:
@@ -94,7 +96,9 @@ class WikipediaArchiveSearcher:
         """
         bz2_decom = bz2.BZ2Decompressor()
         with open(self.multistream_path, "rb") as wiki_file:
+            logger.info(f'Seeking out to {start_index}...')
             wiki_file.seek(start_index)
+            logger.info(f'Reading from {start_index} to {end_index}...')
             bytes_of_interest = wiki_file.read(end_index - start_index)
 
         return bz2_decom.decompress(bytes_of_interest).decode()
