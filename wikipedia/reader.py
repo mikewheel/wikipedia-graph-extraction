@@ -62,6 +62,7 @@ class WikipediaArchiveSearcher:
         if len(results) == 0:
             raise self.ArticleNotFoundError(article.article_title)
         sqlite_table_index, start_index, page_id, title, end_index = results[0]
+        logger.info(f'{title}: {start_index} -> {end_index}')
         start_index = int(start_index)
         end_index = int(end_index)
         page_id = int(page_id)
@@ -96,7 +97,6 @@ class WikipediaArchiveSearcher:
         """
         bz2_decom = bz2.BZ2Decompressor()
         with open(self.multistream_path, "rb") as wiki_file:
-            logger.info(f'Seeking out to {start_index}...')
             wiki_file.seek(start_index)
             logger.info(f'Reading from {start_index} to {end_index}...')
             bytes_of_interest = wiki_file.read(end_index - start_index)
