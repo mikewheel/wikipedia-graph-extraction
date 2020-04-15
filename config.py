@@ -33,12 +33,13 @@ COOL_ASCII_ART_HEADER = dedent("""\n
 
 LOG_UPDATE_SEARCH_EVERY = 10000
 
+
 def make_logger(module_name):
     logger = getLogger(module_name)
     logger.setLevel(DEBUG)
     formatter = Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
     
-    file_handler = FileHandler(OUTPUT_DATA_DIR / "search.log", mode="a")
+    file_handler = FileHandler(OUTPUT_DATA_DIR / "search.log", mode="w")
     file_handler.setFormatter(formatter)
     file_handler.setLevel(DEBUG)
     
