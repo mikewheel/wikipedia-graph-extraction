@@ -55,7 +55,7 @@ if __name__ == "__main__":
                 as a previously searched Wikipedia article.
                 TL;DR: This will only occur if we have seen this article before, so we don't need to process it.
                 '''
-                continue_search = counter < 150 and len(search_queue) != 0
+                continue_search = len(search_queue) != 0
                 continue
     
             for linked_article in links:
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                     current_article_node = ArticleNode.retrieve_node(current_article)
                     ArticleNode.add_edge(current_article_node, linked_article_node)
                     
-            continue_search = counter < 500 and len(search_queue) != 0
+            continue_search = len(search_queue) != 0
         except KeyboardInterrupt as e:
             logger.info(f'Received keyboard interrupt — hard stop for search.')
             exit()
