@@ -42,7 +42,7 @@ if __name__ == "__main__":
         if counter % LOG_UPDATE_SEARCH_EVERY == 0:
             logger.info(f'Search has reached {counter} nodes...')
         
-        current_article = search_queue.pop()
+        current_article = search_queue.pop(0)
         links = current_article.outgoing_links
         logger.info(f'\tCurrent article: {current_article.article_title}\n\tOutgoing links: {len(links)}')
 
