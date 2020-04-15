@@ -2,36 +2,49 @@
 Controller module for generation of Neo4J data store entries modeling graphical relationships between
 members of the music industry on Wikipedia.
 """
-from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE
-from data_stores.neo4j.article_node import ArticleNode
-from data_stores.redis.article_cache import ArticleCache
+from config import WIKIPEDIA_ARCHIVE_FILE, WIKIPEDIA_INDEX_FILE, make_logger, COOL_ASCII_ART_HEADER, \
+    LOG_UPDATE_SEARCH_EVERY
+from datetime import datetime
+from data_stores.neo_4j.article_node import ArticleNode
+from data_stores.redis_.article_cache import ArticleCache
 from search.seed_artists import SEED_LIST
 from wikipedia.reader import WikipediaArchiveSearcher
 
+logger = make_logger(__name__)
+
 if __name__ == "__main__":
-    # Init searcher and seed queue
+    logger.info(COOL_ASCII_ART_HEADER)
+    logger.info(f'Run @ {datetime.now()}')
+    logger.info("Initializing Wikipeda Archive searcher...")
     wikipedia_searcher = WikipediaArchiveSearcher(multistream_path=WIKIPEDIA_ARCHIVE_FILE,
                                                   index_path=WIKIPEDIA_INDEX_FILE)
+    
     ArticleNode.clear()
+    
+    logger.info("Constructing the seed list...")
     search_queue = []
 
     for artist in SEED_LIST:
         wikipedia_searcher.retrieve_article_xml(artist)
         ArticleNode.add_node(artist)
         search_queue.append(artist)
-    print("Finished adding seed list ")
 
-    # Init cache
+    logger.info("Initializing search cache...")
     cache = ArticleCache()
     cache.clear()
 
-    # init counter, for termination purposes
+    # Handle termination of search
     counter = len(search_queue)
-
     continue_search = True
+    
+    logger.info("Starting the breadth-first search of Wikipedia")
     while continue_search:
+        if counter % LOG_UPDATE_SEARCH_EVERY == 0:
+            logger.info(f'Search has reached {counter} nodes...')
+        
         current_article = search_queue.pop(0)
         links = current_article.outgoing_links
+        logger.info(f'\tCurrent article: {current_article.article_title}\n\tOutgoing links: {len(links)}')
 
         if links is None:
             '''
@@ -56,10 +69,10 @@ if __name__ == "__main__":
                     link_is_musical_artist = cache.retrieve_classification(linked_article)
                 except WikipediaArchiveSearcher.ArticleNotFoundError:
                     link_is_musical_artist = False
-
-
+                    
             # Add to data store if classification comes back true
             if link_is_musical_artist:
+                logger.info(f'Creating edge: {current_article.article_title} -> {linked_article}')
                 node_is_new = stored_classification is None
                 linked_article_node = ArticleNode.add_node(linked_article)  # gets existing or adds new if none exists
                 # check if node has been seen before adding to search queue
@@ -70,8 +83,7 @@ if __name__ == "__main__":
                 # get node for current artist and add edge between it and linked article
                 current_article_node = ArticleNode.retrieve_node(current_article)
                 ArticleNode.add_edge(current_article_node, linked_article_node)
-
-        print("counter:", counter)
+                
         continue_search = counter < 500 and len(search_queue) != 0
 
 
